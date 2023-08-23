@@ -9,3 +9,16 @@ Getting call again and again for allowing the entry at gate ? Preapprove guest w
 You want to have a discussion/plan with Gupta Ji from tower 25. No worries we got you covered. Just send message with ResiSync.
 
 Someone parked car behind your car ?? No worries scan car number and person will be notified
+
+## To Start Services
+
+# if golang is installed in system
+ go to each service -> internal -> server and run go run <filename>.go
+
+# if golang is not installed 
+update GOOS & GOARCH in dockerfile
+
+then execute script.sh
+
+go to bin folder execute each file in different terminal
+

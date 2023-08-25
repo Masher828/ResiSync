@@ -1,12 +1,15 @@
 package security
 
 import (
+	"ResiSync/pkg/constants"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
 	"io"
 	"log"
+
+	"github.com/spf13/viper"
 )
 
 func GenerateRandomBytes(n int) ([]byte, error) {
@@ -63,6 +66,10 @@ func Aes256GCMDecode(cipherText, encryptionKey, nonce []byte) (string, error) {
 	return string(plainText), nil
 }
 
+func EncryptPassword(plainPassword string) (string, string, error) {
+	return EncryptString(plainPassword, viper.GetString(constants.EncryptionKey))
+}
+
 func EncryptString(plainText, base64EncryptionKey string) (string, string, error) {
 	encryptionKey, err := base64.StdEncoding.DecodeString(base64EncryptionKey)
 
@@ -78,6 +85,10 @@ func EncryptString(plainText, base64EncryptionKey string) (string, string, error
 	}
 
 	return base64.StdEncoding.EncodeToString(encryptAes), base64.StdEncoding.EncodeToString(nonce), nil
+}
+
+func DecryptPassword(encryptedPassword, passwordNonce string) (string, error) {
+	return DecryptString(encryptedPassword, viper.GetString(constants.EncryptionKey), passwordNonce)
 }
 
 func DecryptString(base64CipherText, base64EncryptionKey, base64Nonce string) (string, error) {

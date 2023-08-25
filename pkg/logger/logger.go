@@ -40,7 +40,7 @@ func InitializeLoggerWithHook(hookFn func(entry zapcore.Entry) error) {
 }
 
 func initializeLogger() {
-	keyPath := []string{constants.CommonConfigFolderName, constants.ConfigSectionLogging}
+	keyPath := []string{constants.ConfigSectionLogging}
 
 	key := strings.Join(keyPath, ".")
 

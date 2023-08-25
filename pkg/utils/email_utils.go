@@ -47,7 +47,7 @@ func getSmtpDetails() (smtp.Auth, string, error) {
 		return nil, "", err
 	}
 
-	decryptedPassword, err := security.DecryptString(smtpconfig.Password, smtpconfig.PasswordKey, smtpconfig.PasswordNonce)
+	decryptedPassword, err := security.DecryptPassword(smtpconfig.Password, smtpconfig.PasswordNonce)
 	if err != nil {
 		log.Error("Error while decryption smtp password", zap.Error(err))
 		return nil, "", err

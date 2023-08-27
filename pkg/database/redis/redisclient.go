@@ -16,7 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var tracer *sdktrace.TracerProvider
+var tracer *sdktrace.TracerProvider = nil
 
 func GetRedisClient() (*redis.Client, error) {
 
@@ -54,18 +54,20 @@ func GetRedisClient() (*redis.Client, error) {
 		return nil, err
 	}
 
-	tracer, err = otel.GetTracerProvider("redis")
-	if err != nil {
-		log.Println("Error while getting tracer provider for redis", err)
-		return nil, err
-	}
+	if otel.IsTracingEnabled() {
+		tracer, err = otel.GetTracerProvider("redis")
+		if err != nil {
+			log.Println("Error while getting tracer provider for redis", err)
+			return nil, err
+		}
 
-	err = redisotel.InstrumentTracing(client, redisotel.WithTracerProvider(tracer))
-	if err != nil {
-		log.Println("Error while instrumenting redis", err)
-		return nil, err
-	}
+		err = redisotel.InstrumentTracing(client, redisotel.WithTracerProvider(tracer))
+		if err != nil {
+			log.Println("Error while instrumenting redis", err)
+			return nil, err
+		}
 
+	}
 	return client, nil
 
 }

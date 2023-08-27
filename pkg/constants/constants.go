@@ -20,8 +20,7 @@ const (
 
 // mail
 var (
-	ConfigSectionSmtp = "smtp"
-	ConfigSmtpKey     = fmt.Sprintf("%s.%s", CommonConfigFolderName, ConfigSectionSmtp)
+	ConfigSmtpKey = fmt.Sprintf("%s.%s", CommonConfigFolderName, "smtp")
 )
 
 // logging

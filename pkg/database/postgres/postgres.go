@@ -17,7 +17,7 @@ import (
 	"gorm.io/plugin/opentelemetry/tracing"
 )
 
-var tracer *sdktrace.TracerProvider
+var tracer *sdktrace.TracerProvider = nil
 
 func GetPostgresClient() (*gorm.DB, error) {
 
@@ -40,12 +40,14 @@ func GetPostgresClient() (*gorm.DB, error) {
 		log.Panic("Error while parsing postgres databaseurl", err)
 	}
 
-	tracer, err = otel.GetTracerProvider("postgres")
-	if err != nil {
-		log.Panic("Error while parsing postgres databaseurl", err)
-	}
+	if otel.IsTracingEnabled() {
+		tracer, err = otel.GetTracerProvider("postgres")
+		if err != nil {
+			log.Panic("Error while parsing postgres databaseurl", err)
+		}
 
-	db.Use(tracing.NewPlugin(tracing.WithTracerProvider(tracer)))
+		db.Use(tracing.NewPlugin(tracing.WithTracerProvider(tracer)))
+	}
 
 	return db, nil
 }

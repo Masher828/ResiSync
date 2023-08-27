@@ -39,11 +39,13 @@ func GetRestApiEngine(appContext *models.ApplicationContextStruct) *gin.Engine {
 
 	log.Info("Logger intialized")
 
-	tracer, err = otel.InitTracer(appContext.AppName)
-	if err != nil {
-		log.Error("error while enabling tracer", zap.Error(err), zap.String("appname", appContext.AppName))
-	} else if tracer == nil {
-		log.Info("Tracer is not enabled")
+	if otel.IsTracingEnabled() {
+		tracer, err = otel.InitTracer(appContext.AppName)
+		if err != nil {
+			log.Error("error while enabling tracer", zap.Error(err), zap.String("appname", appContext.AppName))
+		} else if tracer == nil {
+			log.Info("Tracer is not enabled")
+		}
 	}
 
 	//TODO add metrics

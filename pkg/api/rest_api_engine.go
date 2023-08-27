@@ -7,6 +7,7 @@ import (
 	"ResiSync/pkg/models"
 	"ResiSync/pkg/otel"
 	"ResiSync/pkg/utils"
+	"context"
 	"os"
 
 	"github.com/gin-contrib/cors"
@@ -127,12 +128,13 @@ func addRequestContext(appName string) gin.HandlerFunc {
 
 		var requestContext models.ResiSyncRequestContext
 
-		requestContext.Log = logger.GetBasicLogger().With(
-			zap.Field{Key: "url", String: c.Request.RequestURI})
+		requestContext.Context = context.TODO()
+
+		requestContext.Log = logger.GetBasicLogger()
 
 		requestContext.SetTraceID(uuid.New().String())
 
-		c.Set(constants.RequestContextKey, requestContext)
+		c.Set(constants.RequestContextKey, &requestContext)
 
 		c.Next()
 

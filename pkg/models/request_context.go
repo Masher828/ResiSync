@@ -12,6 +12,7 @@ type key string
 const (
 	requestContextTraceIDKey     key = "trace_id"
 	requestContextUserContextKey key = "user_context"
+	requestContextRoutePathKey   key = "route_path"
 )
 
 type UserContext struct {
@@ -46,6 +47,17 @@ func (rs *ResiSyncRequestContext) GetUserContext() *UserContext {
 		return val
 	}
 	return nil
+}
+
+func (rs *ResiSyncRequestContext) SetRoutePath(routePath string) {
+	rs.Context = context.WithValue(rs.Context, requestContextTraceIDKey, routePath)
+}
+
+func (rs *ResiSyncRequestContext) GetRoutePath() string {
+	if val, ok := rs.Context.Value(requestContextRoutePathKey).(string); ok {
+		return val
+	}
+	return ""
 }
 
 type RouteContext interface {

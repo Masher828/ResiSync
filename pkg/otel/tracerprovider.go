@@ -15,6 +15,11 @@ import (
 	"go.uber.org/zap"
 )
 
+var tracingLevel map[string]int = map[string]int{
+	constants.TracingLevelInfo:     1,
+	constants.TracingLevelDebug:    0,
+	constants.TracingLevelCritical: 2}
+
 func InitTracer(appName string) (*trace.TracerProvider, error) {
 
 	if !viper.GetBool(constants.ConfigTracingEnabled) {
@@ -51,7 +56,7 @@ func GetTracerProvider(appName string) (*trace.TracerProvider, error) {
 	resources, err := resource.New(
 		context.Background(),
 		resource.WithAttributes(
-			attribute.String("service.Name", serviceName),
+			attribute.String("service.name", serviceName),
 			attribute.String("library.language", "go"),
 		),
 	)
@@ -63,4 +68,16 @@ func GetTracerProvider(appName string) (*trace.TracerProvider, error) {
 	return trace.NewTracerProvider(trace.WithSampler(trace.AlwaysSample()),
 		trace.WithBatcher(exporter),
 		trace.WithResource(resources)), nil
+}
+
+func IsTracingEnabled() bool {
+	return viper.GetBool(constants.ConfigTracingEnabled)
+}
+
+func OtelTracingLevel() string {
+	return viper.GetString(constants.ConfigTracingLevel)
+}
+
+func TracingLevel(level string) int {
+	return tracingLevel[level]
 }

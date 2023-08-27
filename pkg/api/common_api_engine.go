@@ -16,6 +16,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	openotel "go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -51,7 +54,7 @@ func GetAccessToken(c *gin.Context) string {
 
 	accessToken := ""
 
-	if len(accessTokenSplit) != 2 {
+	if len(accessTokenSplit) >= 2 {
 		accessToken = accessTokenSplit[1]
 	}
 
@@ -122,7 +125,6 @@ func GracefulShutdownApp(srv *http.Server, shutdown models.Shutdown) {
 	}
 
 	log.Info("Server terminated!!")
-
 }
 
 func closeConnections(log *zap.Logger) {
@@ -136,4 +138,26 @@ func closeConnections(log *zap.Logger) {
 	}
 
 	log.Info("Connections closed")
+}
+
+func GetRequestContextFromRequest(c *gin.Context) *models.ResiSyncRequestContext {
+	requestContext, _ := c.Get(constants.RequestContextKey)
+
+	return requestContext.(*models.ResiSyncRequestContext)
+}
+
+func AddTrace(requestContext *models.ResiSyncRequestContext, level, spanName string) trace.Span {
+
+	tracerContext, span := openotel.Tracer("").Start(requestContext.Context, spanName)
+
+	span.SetAttributes(attribute.String("traceID", requestContext.GetTraceID()))
+
+	if requestContext.GetUserContext() != nil {
+		span.SetAttributes(attribute.Int64("userContext", requestContext.GetUserContext().ID))
+	}
+
+	span.SetAttributes(attribute.String("routePath", requestContext.GetRoutePath()))
+	requestContext.Context = tracerContext
+	return span
+
 }

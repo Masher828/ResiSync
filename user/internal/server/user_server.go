@@ -3,8 +3,11 @@ package main
 import (
 	"ResiSync/pkg/api"
 	"ResiSync/pkg/logger"
+	"ResiSync/pkg/migrator"
 	"ResiSync/pkg/models"
 	shared_api "ResiSync/shared/api"
+	userMigrator "ResiSync/user/internal/migrator"
+	routes "ResiSync/user/internal/route"
 	"fmt"
 	"net/http"
 
@@ -36,6 +39,13 @@ func main() {
 		Addr:    host + ":" + port,
 		Handler: engine,
 	}
+
+	var rest routes.Rest
+	api.SetupRoutes(engine, &rest)
+
+	var migrate userMigrator.Migrator
+
+	migrator.Migrate(&migrate)
 
 	go func() {
 		err := srv.ListenAndServe()

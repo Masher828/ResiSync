@@ -37,7 +37,11 @@ var (
 	ConfigSectionOtel           = fmt.Sprintf("%s.%s", CommonConfigFolderName, "otel")
 	ConfigSectionTracing        = fmt.Sprintf("%s.%s", ConfigSectionOtel, "tracing")
 	ConfigTracingEnabled        = fmt.Sprintf("%s.%s", ConfigSectionTracing, "enabled")
+	ConfigTracingLevel          = fmt.Sprintf("%s.%s", ConfigSectionTracing, "level")
 	ConfigJaegarUrlCollectorKey = fmt.Sprintf("%s.%s", ConfigSectionTracing, "collector_url")
+	TracingLevelInfo            = "info"
+	TracingLevelDebug           = "debug"
+	TracingLevelCritical        = "critical"
 )
 
 // database

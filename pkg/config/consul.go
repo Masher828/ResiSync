@@ -3,35 +3,42 @@ package config
 import (
 	"ResiSync/pkg/constants"
 	pkgerror "ResiSync/pkg/errors"
-	"os"
+	"fmt"
 	"strings"
 
 	consul "github.com/hashicorp/consul/api"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
-var consulClient *consul.Client
+var consulClient *consul.Client = nil
 
 func getConsulHost() string {
-	host := os.Getenv(constants.ConsulHost)
-
+	host := viper.GetString(constants.ConsulHost)
 	return strings.TrimSuffix(host, "/")
 }
 
-func init() {
-	log.Info("Initializing consul client")
-	config := consul.DefaultConfig()
-	config.Address = getConsulHost()
-	config.Token = os.Getenv(constants.ConsulHttpToken)
+func getConsulClient() *consul.Client {
+	if consulClient == nil {
+		log.Info("Initializing consul client")
+		config := consul.DefaultConfig()
+		config.Address = getConsulHost()
+		config.Token = viper.GetString(constants.ConsulHttpToken)
 
-	var err error = nil
-	consulClient, err = consul.NewClient(config)
-	if err != nil {
-		log.Panic("Error while initializing consul", zap.Error(err))
+		var err error = nil
+		consulClient, err = consul.NewClient(config)
+		if err != nil {
+			log.Panic("Error while initializing consul", zap.Error(err))
+		}
 	}
+
+	return consulClient
 }
 
 func GetConsulKeyValueList(key string) ([]string, error) {
+
+	fmt.Println(key)
+	consulClient = getConsulClient()
 
 	kvPair, _, err := consulClient.KV().List(key, nil)
 	if err != nil {

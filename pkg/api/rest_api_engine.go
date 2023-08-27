@@ -27,7 +27,13 @@ func init() {
 
 func GetRestApiEngine(appContext *models.ApplicationContextStruct) *gin.Engine {
 
-	err := config.LoadConfig()
+	err := config.LoadEnv()
+	if err != nil {
+		log.Panic("Error while loading env file", zap.String("appName", appContext.AppName), zap.Error(err))
+		return nil
+	}
+
+	err = config.LoadConfig()
 	if err != nil {
 		log.Panic("Error while loading config", zap.String("appName", appContext.AppName), zap.Error(err))
 		return nil

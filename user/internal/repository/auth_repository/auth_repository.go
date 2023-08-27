@@ -3,7 +3,6 @@ package authrepository
 import (
 	"ResiSync/pkg/api"
 	"ResiSync/pkg/models"
-	userModels "ResiSync/user/internal/models"
 	"fmt"
 )
 
@@ -14,8 +13,8 @@ func GetUserDetailsFromRepo(requestContext *models.ResiSyncRequestContext) {
 	}
 	fmt.Println("Getting data from repo")
 
-	user := userModels.User{}
+	// user := userModels.User{}
 
-	fmt.Println(user)
+	// fmt.Println(user)
 
 }

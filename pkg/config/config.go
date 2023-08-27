@@ -3,7 +3,6 @@ package config
 import (
 	"ResiSync/pkg/constants"
 	"ResiSync/pkg/logger"
-	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -16,12 +15,18 @@ func init() {
 	log = logger.GetAppStartupLogger()
 }
 
+func LoadEnv() error {
+	viper.SetConfigFile(".env")
+
+	return viper.ReadInConfig()
+}
+
 func LoadConfig() error {
 	log.Info("started loading config")
 
 	viper.SetConfigType("yaml")
 
-	key := strings.Join([]string{os.Getenv(constants.ConsulConfigKey), constants.CommonConfigFolderName}, "/")
+	key := strings.Join([]string{viper.GetString(constants.ConsulConfigKey), constants.CommonConfigFolderName}, "/")
 
 	keyValueList, err := GetConsulKeyValueList(key)
 	if err != nil {

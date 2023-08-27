@@ -1,16 +1,18 @@
 package constants
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // consul
 const (
-	ConsulHost      = "CONSUL_CONFIG_HOST"
+	ConsulHost      = "CONSUL_HOST"
 	ConsulHttpToken = "CONSUL_HTTP_TOKEN"
 	ConsulConfigKey = "CONSUL_CONFIG_KEY"
 )
 
 // common
-const (
+var (
 	EnvEnvironment         = "ENV"
 	CommonConfigFolderName = "common"
 	EnvironmentProduction  = "production"

@@ -2,14 +2,18 @@ package security
 
 import (
 	"ResiSync/pkg/constants"
+	"ResiSync/pkg/models"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha512"
 	"encoding/base64"
+	"encoding/hex"
 	"io"
 	"log"
 
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 func GenerateRandomBytes(n int) ([]byte, error) {
@@ -44,7 +48,6 @@ func Aes256GCMEncode(plainText []byte, encryptionKey []byte) ([]byte, []byte, er
 	cipherText := aesGCM.Seal(nil, nonce, plainText, nil)
 
 	return cipherText, nonce, err
-
 }
 
 func Aes256GCMDecode(cipherText, encryptionKey, nonce []byte) (string, error) {
@@ -113,5 +116,39 @@ func DecryptString(base64CipherText, base64EncryptionKey, base64Nonce string) (s
 	}
 
 	return string(decryptedAes[:]), nil
+}
 
+func HashPasswordWithSalt(password string, salt []byte) string {
+
+	var passwordBytes = append([]byte(password), salt...)
+
+	var sha512Hasher = sha512.New()
+
+	sha512Hasher.Write(passwordBytes)
+
+	var hashedPasswordBytes = sha512Hasher.Sum(nil)
+
+	return hex.EncodeToString(hashedPasswordBytes)
+}
+
+func Hashpassword(requestContext models.ResiSyncRequestContext, hashLength int, password string) (string, string, error) {
+
+	log := requestContext.Log
+
+	salt, err := GenerateRandomBytes(hashLength)
+	if err != nil {
+		log.Error("error while generating salt", zap.Error(err))
+		return "", "", err
+	}
+
+	return HashPasswordWithSalt(password, salt), hex.EncodeToString(salt), nil
+}
+
+func ComparePassword(hashedPassword, salt, password string) bool {
+
+	saltByte, err := hex.DecodeString(salt)
+	if err != nil {
+		return false
+	}
+	return hashedPassword == HashPasswordWithSalt(password, saltByte)
 }

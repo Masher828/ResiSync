@@ -3,7 +3,6 @@ package config
 import (
 	"ResiSync/pkg/constants"
 	pkgerror "ResiSync/pkg/errors"
-	"fmt"
 	"strings"
 
 	consul "github.com/hashicorp/consul/api"
@@ -37,7 +36,6 @@ func getConsulClient() *consul.Client {
 
 func GetConsulKeyValueList(key string) ([]string, error) {
 
-	fmt.Println(key)
 	consulClient = getConsulClient()
 
 	kvPair, _, err := consulClient.KV().List(key, nil)

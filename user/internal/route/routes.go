@@ -13,5 +13,6 @@ func (r *Rest) SetupPrivateRoutes(engine *gin.Engine) {
 }
 
 func (r *Rest) SetupPublicRoutes(engine *gin.Engine) {
-	engine.GET("/user", controller.GetUserDetails)
+	engine.POST("/user/signin", controller.SignIn)
+	engine.POST("/user/signup", controller.SignUp)
 }

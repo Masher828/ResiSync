@@ -1,8 +1,9 @@
 package user_service
 
 import (
-	user_constants "ResiSync/app/internal/constants"
-	userModels "ResiSync/app/internal/models"
+	"ResiSync/app/internal/constants"
+	user_constants "ResiSync/app/internal/constants/user"
+	user_models "ResiSync/app/internal/models"
 	user_utils "ResiSync/app/internal/utils"
 	"ResiSync/pkg/api"
 	"ResiSync/pkg/models"
@@ -15,7 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func GetNewUserObject(requestContext models.ResiSyncRequestContext, userDto *userModels.ResidentDTO) (*userModels.Resident, error) {
+func GetNewUserObject(requestContext models.ResiSyncRequestContext, userDto *user_models.ResidentDTO) (*user_models.Resident, error) {
 	span := api.AddTrace(&requestContext, "info", "GetNewUser")
 	defer span.End()
 
@@ -46,7 +47,7 @@ func GetNewUserObject(requestContext models.ResiSyncRequestContext, userDto *use
 	return user, err
 }
 
-func Authenticate(requestContext models.ResiSyncRequestContext, userDto *userModels.ResidentDTO, password string) (bool, error) {
+func Authenticate(requestContext models.ResiSyncRequestContext, userDto *user_models.ResidentDTO, password string) (bool, error) {
 	span := api.AddTrace(&requestContext, "info", "Authenticate")
 	defer span.End()
 
@@ -65,7 +66,7 @@ func Authenticate(requestContext models.ResiSyncRequestContext, userDto *userMod
 	return passwordMatching, nil
 }
 
-func InitUserSession(requestContext models.ResiSyncRequestContext, userSession *userModels.ResidentDTO) error {
+func InitUserSession(requestContext models.ResiSyncRequestContext, userSession *user_models.ResidentDTO) error {
 	span := api.AddTrace(&requestContext, "info", "InitUserSession")
 	defer span.End()
 
@@ -83,7 +84,7 @@ func InitUserSession(requestContext models.ResiSyncRequestContext, userSession *
 
 	key := user_utils.GetAccessTokenToUserKey(userSession.AccessToken)
 
-	err = redisDB.Set(requestContext.Context, key, userSessionBytes, user_constants.SessionExpiryTime).Err()
+	err = redisDB.Set(requestContext.Context, key, userSessionBytes, constants.SessionExpiryTime).Err()
 	if err != nil {
 		log.Error("error while creating access token to user key", zap.Error(err))
 		return err
@@ -105,7 +106,7 @@ func UpdateLastLogIn(requestContext models.ResiSyncRequestContext, id int64) err
 
 	log := requestContext.Log
 
-	var user = userModels.Resident{Id: id, LastLoginOn: shared_utils.NowInUTC().UnixNano()}
+	var user = user_models.Resident{Id: id, LastLoginOn: shared_utils.NowInUTC().UnixNano()}
 
 	err := postgres_db.SaveOrUpdate(requestContext, &user)
 	if err != nil {
@@ -117,7 +118,7 @@ func UpdateLastLogIn(requestContext models.ResiSyncRequestContext, id int64) err
 }
 
 func LogOut(requestContext models.ResiSyncRequestContext) {
-	span := api.AddTrace(&requestContext, "info", "UpdateLastLogIn")
+	span := api.AddTrace(&requestContext, "info", "LogOut")
 	defer span.End()
 	log := requestContext.Log
 
@@ -135,4 +136,22 @@ func LogOut(requestContext models.ResiSyncRequestContext) {
 	if err := redisDB.LRem(requestContext.Context, key, 1, userContext.AccessToken).Err(); err != nil {
 		log.Error("error while removing user access token ", zap.Error(err), zap.Int64("userId", userContext.ID))
 	}
+}
+
+func GetUserProfile(requestContext models.ResiSyncRequestContext) (*user_models.Resident, error) {
+	span := api.AddTrace(&requestContext, "info", "GetUserProfile")
+	defer span.End()
+	log := requestContext.Log
+
+	userContext := requestContext.GetUserContext()
+
+	user := user_models.Resident{Id: userContext.ID}
+
+	err := postgres_db.GetWithFields(requestContext, &user, user_constants.UserProfile)
+	if err != nil {
+		log.Error("Error while fetching profile", zap.Int64("user id", userContext.ID), zap.Error(err))
+		return nil, err
+	}
+
+	return &user, nil
 }

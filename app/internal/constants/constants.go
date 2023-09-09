@@ -1,4 +1,4 @@
-package user_constants
+package constants
 
 import "time"
 

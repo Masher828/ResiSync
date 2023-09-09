@@ -18,4 +18,7 @@ func (r *Rest) SetupPublicRoutes(engine *gin.Engine) {
 	engine.POST("/user/signin", controller.SignIn)
 	engine.POST("/user/signup", controller.SignUp)
 	engine.POST("/user/logout", controller.LogOut)
+
+	//user Details
+	engine.GET("/user/profile", controller.GetUserProfile)
 }

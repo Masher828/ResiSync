@@ -1,14 +1,16 @@
 package models
 
 import (
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 type ApplicationContextStruct struct {
-	AppName  string
-	Postgres *gorm.DB
-	Redis    *redis.Client
+	AppName   string
+	Postgres  *gorm.DB
+	Redis     *redis.Client
+	S3Session *s3.S3
 }
 
 type LoggerConfig struct {

@@ -13,6 +13,7 @@ const (
 
 // common
 var (
+	EnvFilePathKey         = "RESI_SYNC_ENV"
 	EnvEnvironment         = "ENV"
 	CommonConfigFolderName = "common"
 	EnvironmentProduction  = "production"
@@ -43,6 +44,11 @@ var (
 	TracingLevelInfo            = "info"
 	TracingLevelDebug           = "debug"
 	TracingLevelCritical        = "critical"
+)
+
+// aws
+var (
+	ConfigSectionAWS = fmt.Sprintf("%s.%s", CommonConfigFolderName, "aws")
 )
 
 // database

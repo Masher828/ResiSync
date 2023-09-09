@@ -1,6 +1,7 @@
 package api
 
 import (
+	aws_services "ResiSync/pkg/aws"
 	"ResiSync/pkg/constants"
 	postgresclient "ResiSync/pkg/database/postgres"
 	redisclient "ResiSync/pkg/database/redis"
@@ -43,6 +44,11 @@ func PrepareApplicationContext() error {
 		return err
 	}
 
+	ApplicationContext.S3Session, err = aws_services.CreateNewS3Session()
+	if err != nil {
+		log.Error("Error while creating s3 session", zap.Error(err))
+		return err
+	}
 	return nil
 }
 

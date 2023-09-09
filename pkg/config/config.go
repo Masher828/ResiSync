@@ -3,6 +3,7 @@ package config
 import (
 	"ResiSync/pkg/constants"
 	"ResiSync/pkg/logger"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -16,7 +17,7 @@ func init() {
 }
 
 func LoadEnv() error {
-	viper.SetConfigFile(".env")
+	viper.SetConfigFile(os.Getenv(constants.EnvFilePathKey))
 
 	return viper.ReadInConfig()
 }

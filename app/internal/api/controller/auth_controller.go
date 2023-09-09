@@ -1,11 +1,12 @@
 package controller
 
 import (
+	user_errors "ResiSync/app/internal/app_errors"
+	userModels "ResiSync/app/internal/models"
+	"ResiSync/app/internal/services/user_service.go"
+	authfacade "ResiSync/app/internal/services_facade/auth_facade"
 	"ResiSync/pkg/api"
 	shared_models "ResiSync/shared/models"
-	userModels "ResiSync/user/internal/models"
-	authfacade "ResiSync/user/internal/services_facade/auth_facade"
-	"ResiSync/user/internal/user_errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -69,4 +70,18 @@ func SignUp(c *gin.Context) {
 	response := shared_models.Response{Status: "ok"}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func LogOut(c *gin.Context) {
+	requestContext := api.GetRequestContextFromRequest(c)
+	span := api.AddTrace(requestContext, "info", "LogOut")
+	if span != nil {
+		defer span.End()
+	}
+
+	user_service.LogOut(*requestContext)
+	response := shared_models.Response{Status: "ok"}
+
+	c.JSON(http.StatusOK, response)
+
 }

@@ -1,7 +1,7 @@
 package user_utils
 
 import (
-	user_constants "ResiSync/user/internal/constants"
+	user_constants "ResiSync/app/internal/constants"
 	"fmt"
 )
 

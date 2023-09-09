@@ -1,12 +1,12 @@
 package authfacade
 
 import (
+	user_errors "ResiSync/app/internal/app_errors"
+	userModels "ResiSync/app/internal/models"
+	userService "ResiSync/app/internal/services/user_service.go"
 	"ResiSync/pkg/api"
 	"ResiSync/pkg/models"
 	postgres_db "ResiSync/shared/database"
-	userModels "ResiSync/user/internal/models"
-	userService "ResiSync/user/internal/services/user_service.go"
-	"ResiSync/user/internal/user_errors"
 
 	"go.uber.org/zap"
 )
@@ -16,6 +16,10 @@ func SignUp(requestContext models.ResiSyncRequestContext, userDto *userModels.Re
 	defer span.End()
 
 	log := requestContext.Log
+
+	if !userDto.IsValid() {
+		return user_errors.ErrInvalidPayload
+	}
 
 	user, err := userService.GetNewUserObject(requestContext, userDto)
 	if err != nil {

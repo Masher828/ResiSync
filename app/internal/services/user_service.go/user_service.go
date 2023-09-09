@@ -1,14 +1,14 @@
-package userService
+package user_service
 
 import (
+	user_constants "ResiSync/app/internal/constants"
+	userModels "ResiSync/app/internal/models"
+	user_utils "ResiSync/app/internal/utils"
 	"ResiSync/pkg/api"
 	"ResiSync/pkg/models"
 	"ResiSync/pkg/security"
 	postgres_db "ResiSync/shared/database"
 	shared_utils "ResiSync/shared/utils"
-	user_constants "ResiSync/user/internal/constants"
-	userModels "ResiSync/user/internal/models"
-	user_utils "ResiSync/user/internal/utils"
 	"encoding/json"
 
 	"github.com/google/uuid"
@@ -63,7 +63,6 @@ func Authenticate(requestContext models.ResiSyncRequestContext, userDto *userMod
 	passwordMatching := security.ComparePassword(userDto.Password, userDto.Salt, password)
 
 	return passwordMatching, nil
-
 }
 
 func InitUserSession(requestContext models.ResiSyncRequestContext, userSession *userModels.ResidentDTO) error {
@@ -115,4 +114,25 @@ func UpdateLastLogIn(requestContext models.ResiSyncRequestContext, id int64) err
 	}
 
 	return nil
+}
+
+func LogOut(requestContext models.ResiSyncRequestContext) {
+	span := api.AddTrace(&requestContext, "info", "UpdateLastLogIn")
+	defer span.End()
+	log := requestContext.Log
+
+	userContext := requestContext.GetUserContext()
+
+	redisDB := api.ApplicationContext.Redis
+
+	key := user_utils.GetAccessTokenToUserKey(userContext.AccessToken)
+
+	if err := redisDB.Del(requestContext.Context, key).Err(); err != nil {
+		log.Error("error while removing user access token", zap.Error(err), zap.Int64("userId", userContext.ID))
+	}
+
+	key = user_utils.GetUserToAccessTokenKey(userContext.ID)
+	if err := redisDB.LRem(requestContext.Context, key, 1, userContext.AccessToken).Err(); err != nil {
+		log.Error("error while removing user access token ", zap.Error(err), zap.Int64("userId", userContext.ID))
+	}
 }

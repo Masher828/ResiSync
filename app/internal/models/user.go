@@ -29,17 +29,21 @@ func (u *Resident) GetUserDTO() *ResidentDTO {
 
 type ResidentDTO struct {
 	Id          int64  `json:"id,omitempty"`
-	FirstName   string `json:"firstName,omitempty"`
+	FirstName   string `json:"firstName,omitempty" validate:"required"`
 	LastName    string `json:"lastName,omitempty"`
-	EmailId     string `json:"emailId,omitempty"`
+	EmailId     string `json:"emailId,omitempty" validate:"required"`
 	Phone       string `json:"phone,omitempty"`
 	IsActive    bool   `json:"isActive,omitempty"`
-	Password    string `json:"password,omitempty"`
+	Password    string `json:"password,omitempty" validate:"required"`
 	LastLoginOn int64  `json:"lastLoggedIn,omitempty"`
 
 	AccessToken string `json:"accessToken,omitempty"`
 
 	Salt string `json:"-"`
+}
+
+func (dto *ResidentDTO) IsValid() bool {
+	return len(dto.EmailId) > 0 && len(dto.Password) > 0 && len(dto.FirstName) > 0
 }
 
 func (dto *ResidentDTO) GetUser() *Resident {

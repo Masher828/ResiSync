@@ -1,13 +1,13 @@
 package main
 
 import (
+	userMigrator "ResiSync/app/internal/migrator"
+	routes "ResiSync/app/internal/route"
 	"ResiSync/pkg/api"
 	"ResiSync/pkg/logger"
 	"ResiSync/pkg/migrator"
 	"ResiSync/pkg/models"
 	shared_api "ResiSync/shared/api"
-	userMigrator "ResiSync/user/internal/migrator"
-	routes "ResiSync/user/internal/route"
 	"fmt"
 	"net/http"
 

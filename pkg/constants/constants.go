@@ -15,6 +15,7 @@ const (
 // common
 var (
 	EnvFilePathKey         = "RESI_SYNC_ENV"
+	AwsEncryptionKey       = "AWS_ENCRYPTION_KEY"
 	EnvEnvironment         = "ENV"
 	CommonConfigFolderName = "common"
 	EnvironmentProduction  = "production"

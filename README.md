@@ -14,7 +14,7 @@ Someone parked car behind your car ?? No worries scan car number and person will
 
 add path of .env file in environment variable named  
 # RESI_SYNC_ENV = /path/to/env/file/
-
+# RESI_
 # if golang is installed in system
  go to each service -> internal -> server and run go run <filename>.go
 

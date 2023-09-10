@@ -1,7 +1,7 @@
 package postgresclient
 
 import (
-	"ResiSync/pkg/constants"
+	pkg_constants "ResiSync/pkg/constants"
 	"ResiSync/pkg/models"
 	"ResiSync/pkg/otel"
 	"ResiSync/pkg/security"
@@ -23,7 +23,7 @@ func GetPostgresClient() (*gorm.DB, error) {
 
 	var postgresConf models.Postgres
 
-	err := viper.UnmarshalKey(constants.ConfigSectionPostgres, &postgresConf)
+	err := viper.UnmarshalKey(pkg_constants.ConfigSectionPostgres, &postgresConf)
 	if err != nil {
 		log.Panic("Error while unmarshalling postgres config", err)
 	}

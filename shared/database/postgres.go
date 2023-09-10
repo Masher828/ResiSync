@@ -41,7 +41,7 @@ func SaveOrUpdate(requestContext models.ResiSyncRequestContext, data interface{}
 	return nil
 }
 
-func GetWithFields(requestContext models.ResiSyncRequestContext, data interface{}, fields []string) error {
+func GetWithFields(requestContext models.ResiSyncRequestContext, data interface{}, fields ...string) error {
 	span := api.AddTrace(&requestContext, "info", "GetWithFields")
 	defer span.End()
 
@@ -59,7 +59,7 @@ func GetWithFields(requestContext models.ResiSyncRequestContext, data interface{
 }
 
 func GetData(requestContext models.ResiSyncRequestContext, data interface{}) error {
-	span := api.AddTrace(&requestContext, "info", "GetWithFields")
+	span := api.AddTrace(&requestContext, "info", "GetData")
 	defer span.End()
 
 	log := requestContext.Log

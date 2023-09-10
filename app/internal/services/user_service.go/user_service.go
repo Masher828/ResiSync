@@ -1,19 +1,28 @@
 package user_service
 
 import (
-	"ResiSync/app/internal/constants"
 	user_constants "ResiSync/app/internal/constants/user"
 	user_models "ResiSync/app/internal/models"
 	user_utils "ResiSync/app/internal/utils"
 	"ResiSync/pkg/api"
+	pkg_constants "ResiSync/pkg/constants"
 	"ResiSync/pkg/models"
 	"ResiSync/pkg/security"
 	postgres_db "ResiSync/shared/database"
 	shared_errors "ResiSync/shared/errors"
 	shared_utils "ResiSync/shared/utils"
+	"bytes"
 	"encoding/json"
+	"mime/multipart"
+	"strconv"
+	"time"
 
+	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/google/uuid"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
@@ -85,7 +94,7 @@ func InitUserSession(requestContext models.ResiSyncRequestContext, userSession *
 
 	key := user_utils.GetAccessTokenToUserKey(userSession.AccessToken)
 
-	err = redisDB.Set(requestContext.Context, key, userSessionBytes, constants.SessionExpiryTime).Err()
+	err = redisDB.Set(requestContext.Context, key, userSessionBytes, pkg_constants.SessionExpiryTime).Err()
 	if err != nil {
 		log.Error("error while creating access token to user key", zap.Error(err))
 		return err
@@ -109,7 +118,7 @@ func UpdateLastLogIn(requestContext models.ResiSyncRequestContext, id int64) err
 
 	var user = user_models.Resident{Id: id, LastLoginOn: shared_utils.NowInUTC().UnixNano()}
 
-	err := postgres_db.SaveOrUpdate(requestContext, &user)
+	err := postgres_db.UpdateWithFields(requestContext, &user, "last_login_on")
 	if err != nil {
 		log.Error("error while updating user last logged in time", zap.Error(err))
 		return err
@@ -139,7 +148,7 @@ func LogOut(requestContext models.ResiSyncRequestContext) {
 	}
 }
 
-func GetUserProfile(requestContext models.ResiSyncRequestContext) (*user_models.Resident, error) {
+func GetUserProfile(requestContext models.ResiSyncRequestContext) (*user_models.ResidentDTO, error) {
 	span := api.AddTrace(&requestContext, "info", "GetUserProfile")
 	defer span.End()
 	log := requestContext.Log
@@ -148,16 +157,17 @@ func GetUserProfile(requestContext models.ResiSyncRequestContext) (*user_models.
 
 	user := user_models.Resident{Id: userContext.ID}
 
-	err := postgres_db.GetWithFields(requestContext, &user, user_constants.GetUserProfileFields)
+	err := postgres_db.GetWithFields(requestContext, &user, user_constants.GetUserProfileFields...)
 	if err != nil {
 		log.Error("Error while fetching profile", zap.Int64("user id", userContext.ID), zap.Error(err))
 		return nil, err
 	}
 
-	return &user, nil
+	user.ProfilePictureUrl = shared_utils.GetPresignedS3Url(requestContext, viper.GetString(pkg_constants.AWSS3Bucket), user.ProfilePictureUrl, time.Minute*5)
+	return user.GetUserDTO(), nil
 }
 
-func UpdateUserProfile(requestContext models.ResiSyncRequestContext, user *user_models.Resident) error {
+func UpdateUserProfile(requestContext models.ResiSyncRequestContext, user *user_models.ResidentDTO) error {
 	span := api.AddTrace(&requestContext, "info", "UpdateUserProfile")
 	defer span.End()
 	log := requestContext.Log
@@ -182,8 +192,71 @@ func ValidateUser(requestContext models.ResiSyncRequestContext, user *user_model
 		return shared_errors.ErrInvalidContact
 	}
 
-	if 8 > len(user.Password) || len(user.Password) > 20 {
-		return shared_errors.ErrWeakPassword
-	}
 	return nil
+}
+
+func UpdateProfilePictureInS3(requestContext models.ResiSyncRequestContext, file multipart.File, header *multipart.FileHeader) (string, error) {
+	span := api.AddTrace(&requestContext, "info", "GetProfilePictureS3Object")
+	defer span.End()
+
+	log := requestContext.Log
+
+	userId := requestContext.GetUserContext().ID
+	if len(header.Header["Content-Type"]) == 0 {
+		log.Error("content type not present in image", zap.Int64("userId", userId))
+		return "", shared_errors.ErrInvalidPayload
+	}
+
+	buffer := make([]byte, header.Size)
+
+	_, err := file.Read(buffer)
+	if err != nil {
+		log.Error("Error while reading file", zap.Int64("userId", userId), zap.Error(err))
+		return "", err
+	}
+
+	fileBytes := bytes.NewReader(buffer)
+
+	fileType := header.Header["Content-Type"][0]
+
+	pathToProfile := user_constants.ProfilePictureS3Folder + strings.ReplaceAll(header.Filename, " ", "_") + "-" + strconv.FormatInt(userId, 10)
+
+	params := s3.PutObjectInput{
+		Bucket:        aws.String(viper.GetString(pkg_constants.AWSS3Bucket)),
+		Key:           aws.String(pathToProfile),
+		Body:          fileBytes,
+		ContentLength: aws.Int64(header.Size),
+		ContentType:   aws.String(fileType),
+	}
+
+	s3Session := api.ApplicationContext.S3Session
+	_, err = s3Session.PutObject(&params)
+	if err != nil {
+		log.Error("Error while uploading profile picture to s3",
+			zap.Int64("user Id", userId), zap.Error(err))
+		return "", err
+	}
+	return "", nil
+}
+
+func UpdateProfilePicture(requestContext models.ResiSyncRequestContext, profilePictureUrl string) error {
+	span := api.AddTrace(&requestContext, "info", "UpdateProfilePicture")
+	defer span.End()
+
+	log := requestContext.Log
+
+	user := user_models.Resident{
+		Id:                requestContext.GetUserContext().ID,
+		ProfilePictureUrl: profilePictureUrl,
+	}
+
+	err := postgres_db.UpdateWithFields(requestContext, &user, "profile_picture_url")
+	if err != nil {
+		log.Error("Error while updating profile pic url",
+			zap.Int64("user id", user.Id), zap.Error(err))
+		return err
+	}
+
+	return nil
+
 }

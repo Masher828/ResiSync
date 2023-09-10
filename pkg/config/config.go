@@ -1,7 +1,7 @@
 package config
 
 import (
-	"ResiSync/pkg/constants"
+	pkg_constants "ResiSync/pkg/constants"
 	"ResiSync/pkg/logger"
 	"os"
 	"strings"
@@ -17,7 +17,7 @@ func init() {
 }
 
 func LoadEnv() error {
-	viper.SetConfigFile(os.Getenv(constants.EnvFilePathKey))
+	viper.SetConfigFile(os.Getenv(pkg_constants.EnvFilePathKey))
 
 	return viper.ReadInConfig()
 }
@@ -27,7 +27,7 @@ func LoadConfig() error {
 
 	viper.SetConfigType("yaml")
 
-	key := strings.Join([]string{viper.GetString(constants.ConsulConfigKey), constants.CommonConfigFolderName}, "/")
+	key := strings.Join([]string{viper.GetString(pkg_constants.ConsulConfigKey), pkg_constants.CommonConfigFolderName}, "/")
 
 	keyValueList, err := GetConsulKeyValueList(key)
 	if err != nil {

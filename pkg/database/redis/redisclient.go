@@ -1,7 +1,7 @@
 package redisclient
 
 import (
-	"ResiSync/pkg/constants"
+	pkg_constants "ResiSync/pkg/constants"
 	"ResiSync/pkg/models"
 	"ResiSync/pkg/otel"
 	"ResiSync/pkg/security"
@@ -21,7 +21,7 @@ var tracer *sdktrace.TracerProvider = nil
 func GetRedisClient() (*redis.Client, error) {
 
 	var redisConf models.Redis
-	err := viper.UnmarshalKey(constants.ConfigSectionRedis, &redisConf)
+	err := viper.UnmarshalKey(pkg_constants.ConfigSectionRedis, &redisConf)
 	if err != nil {
 		log.Println("Error while unmarshalling redis config", err)
 		return nil, err

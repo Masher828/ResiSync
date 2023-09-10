@@ -1,7 +1,7 @@
 package security
 
 import (
-	"ResiSync/pkg/constants"
+	pkg_constants "ResiSync/pkg/constants"
 	"ResiSync/pkg/models"
 	"crypto/aes"
 	"crypto/cipher"
@@ -70,7 +70,7 @@ func Aes256GCMDecode(cipherText, encryptionKey, nonce []byte) (string, error) {
 }
 
 func EncryptPassword(plainPassword string) (string, string, error) {
-	return EncryptString(plainPassword, viper.GetString(constants.EncryptionKey))
+	return EncryptString(plainPassword, viper.GetString(pkg_constants.EncryptionKey))
 }
 
 func EncryptString(plainText, base64EncryptionKey string) (string, string, error) {
@@ -91,7 +91,7 @@ func EncryptString(plainText, base64EncryptionKey string) (string, string, error
 }
 
 func DecryptPassword(encryptedPassword, passwordNonce string) (string, error) {
-	return DecryptString(encryptedPassword, viper.GetString(constants.EncryptionKey), passwordNonce)
+	return DecryptString(encryptedPassword, viper.GetString(pkg_constants.EncryptionKey), passwordNonce)
 }
 
 func DecryptString(base64CipherText, base64EncryptionKey, base64Nonce string) (string, error) {

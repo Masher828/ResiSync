@@ -13,5 +13,5 @@ type Redis struct {
 	Address       string `mapstructure:"address" validate:"required"`
 	Password      string `mapstructure:"password" validate:"required,base64"`
 	PasswordNonce string `mapstructure:"password_nonce" validate:"required,base64"`
-	Db            int    `mapstructure:"db" validate:"required"`
+	Db            int    `mapstructure:"db"`
 }

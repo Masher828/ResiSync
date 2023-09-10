@@ -1,7 +1,7 @@
 package config
 
 import (
-	"ResiSync/pkg/constants"
+	pkg_constants "ResiSync/pkg/constants"
 	pkgerror "ResiSync/pkg/errors"
 	"strings"
 
@@ -13,7 +13,7 @@ import (
 var consulClient *consul.Client = nil
 
 func getConsulHost() string {
-	host := viper.GetString(constants.ConsulHost)
+	host := viper.GetString(pkg_constants.ConsulHost)
 	return strings.TrimSuffix(host, "/")
 }
 
@@ -22,7 +22,7 @@ func getConsulClient() *consul.Client {
 		log.Info("Initializing consul client")
 		config := consul.DefaultConfig()
 		config.Address = getConsulHost()
-		config.Token = viper.GetString(constants.ConsulHttpToken)
+		config.Token = viper.GetString(pkg_constants.ConsulHttpToken)
 
 		var err error = nil
 		consulClient, err = consul.NewClient(config)

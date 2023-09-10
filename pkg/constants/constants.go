@@ -1,7 +1,8 @@
-package constants
+package pkg_constants
 
 import (
 	"fmt"
+	"time"
 )
 
 // consul
@@ -49,6 +50,7 @@ var (
 // aws
 var (
 	ConfigSectionAWS = fmt.Sprintf("%s.%s", CommonConfigFolderName, "aws")
+	AWSS3Bucket      = fmt.Sprintf("%s.%s", ConfigSectionAWS, "s3_bucket")
 )
 
 // database
@@ -61,8 +63,10 @@ var (
 // api
 const (
 	RequestAuthenticatedKey    = "is_authenticated"
-	AccessTokenToUserFormatKey = "acessToken: %s"
+	AccessTokenToUserFormatKey = "acessToken:%s"
+	UserToAccessTokenKey       = "user:accessToken:%d"
 	RequestUserContextKey      = "user_context"
+	SessionExpiryTime          = time.Hour * 24
 	RequestContextKey          = "resi_sync_request_context"
 )
 

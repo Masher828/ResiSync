@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"ResiSync/pkg/constants"
+	pkg_constants "ResiSync/pkg/constants"
 	"ResiSync/pkg/models"
 	"log"
 	"strings"
@@ -40,7 +40,7 @@ func InitializeLoggerWithHook(hookFn func(entry zapcore.Entry) error) {
 }
 
 func initializeLogger() {
-	keyPath := []string{constants.ConfigSectionLogging}
+	keyPath := []string{pkg_constants.ConfigSectionLogging}
 
 	key := strings.Join(keyPath, ".")
 

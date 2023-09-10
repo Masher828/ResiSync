@@ -2,7 +2,7 @@ package api
 
 import (
 	aws_services "ResiSync/pkg/aws"
-	"ResiSync/pkg/constants"
+	pkg_constants "ResiSync/pkg/constants"
 	postgresclient "ResiSync/pkg/database/postgres"
 	redisclient "ResiSync/pkg/database/redis"
 	"ResiSync/pkg/logger"
@@ -73,7 +73,7 @@ func GetUserContextFromAccessToken(requestContext *models.ResiSyncRequestContext
 
 	log := logger.GetBasicLogger()
 
-	result := redisDB.Get(requestContext.Context, fmt.Sprintf(constants.AccessTokenToUserFormatKey, accessToken))
+	result := redisDB.Get(requestContext.Context, fmt.Sprintf(pkg_constants.AccessTokenToUserFormatKey, accessToken))
 
 	if result.Err() != nil {
 		log.Error("Error while getting accessToken", zap.String("accessToken", accessToken), zap.Error(result.Err()))
@@ -147,7 +147,7 @@ func closeConnections(log *zap.Logger) {
 }
 
 func GetRequestContextFromRequest(c *gin.Context) *models.ResiSyncRequestContext {
-	requestContext, _ := c.Get(constants.RequestContextKey)
+	requestContext, _ := c.Get(pkg_constants.RequestContextKey)
 
 	return requestContext.(*models.ResiSyncRequestContext)
 }

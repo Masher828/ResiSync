@@ -43,7 +43,7 @@ func UpdateUserProfile(c *gin.Context) {
 
 	log := requestContext.Log
 
-	var user user_models.Resident
+	var user user_models.ResidentDTO
 	err := c.ShouldBind(&user)
 	if err != nil {
 		log.Error("error while binding user profile update", zap.Error(err))
@@ -61,4 +61,32 @@ func UpdateUserProfile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 
+}
+
+func UpdateProfilePicture(c *gin.Context) {
+	requestContext := api.GetRequestContextFromRequest(c)
+	span := api.AddTrace(requestContext, "info", "UpdateProfilePicture")
+	if span != nil {
+		defer span.End()
+	}
+
+	log := requestContext.Log
+
+	file, header, err := c.Request.FormFile("profile_picture")
+	if err != nil {
+		log.Error("error while getting file", zap.Error(err))
+		c.Error(shared_errors.ErrInvalidPayload)
+		return
+	}
+
+	err = user_facade.UpdateProfilePicture(*requestContext, file, header)
+	if err != nil {
+		log.Error("error while updating user profile picture", zap.Error(err))
+		c.Error(err)
+		return
+	}
+
+	response := shared_models.Response{Status: "ok", StatusCode: http.StatusOK}
+
+	c.JSON(http.StatusOK, response)
 }

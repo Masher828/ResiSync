@@ -1,7 +1,7 @@
 package otel
 
 import (
-	"ResiSync/pkg/constants"
+	pkg_constants "ResiSync/pkg/constants"
 	"ResiSync/pkg/logger"
 	"context"
 	"os"
@@ -16,13 +16,13 @@ import (
 )
 
 var tracingLevel map[string]int = map[string]int{
-	constants.TracingLevelInfo:     1,
-	constants.TracingLevelDebug:    0,
-	constants.TracingLevelCritical: 2}
+	pkg_constants.TracingLevelInfo:     1,
+	pkg_constants.TracingLevelDebug:    0,
+	pkg_constants.TracingLevelCritical: 2}
 
 func InitTracer(appName string) (*trace.TracerProvider, error) {
 
-	if !viper.GetBool(constants.ConfigTracingEnabled) {
+	if !viper.GetBool(pkg_constants.ConfigTracingEnabled) {
 		return nil, nil
 	}
 	tracerProvider, err := GetTracerProvider(appName)
@@ -36,7 +36,7 @@ func InitTracer(appName string) (*trace.TracerProvider, error) {
 
 func GetJaegarClient() (trace.SpanExporter, error) {
 
-	tracer, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(viper.GetString(constants.ConfigJaegarUrlCollectorKey))))
+	tracer, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(viper.GetString(pkg_constants.ConfigJaegarUrlCollectorKey))))
 
 	return tracer, err
 }
@@ -51,7 +51,7 @@ func GetTracerProvider(appName string) (*trace.TracerProvider, error) {
 		return nil, err
 	}
 
-	serviceName := appName + "__" + os.Getenv(constants.EnvEnvironment)
+	serviceName := appName + "__" + os.Getenv(pkg_constants.EnvEnvironment)
 
 	resources, err := resource.New(
 		context.Background(),
@@ -71,11 +71,11 @@ func GetTracerProvider(appName string) (*trace.TracerProvider, error) {
 }
 
 func IsTracingEnabled() bool {
-	return viper.GetBool(constants.ConfigTracingEnabled)
+	return viper.GetBool(pkg_constants.ConfigTracingEnabled)
 }
 
 func OtelTracingLevel() string {
-	return viper.GetString(constants.ConfigTracingLevel)
+	return viper.GetString(pkg_constants.ConfigTracingLevel)
 }
 
 func TracingLevel(level string) int {

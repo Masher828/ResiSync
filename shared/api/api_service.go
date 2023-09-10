@@ -14,14 +14,15 @@ func HandleError() gin.HandlerFunc {
 		if len(c.Errors) > 0 {
 			statusCode := http.StatusInternalServerError
 			resp := shared_models.Response{
-				Status:     "error",
-				Error:      "internal server error",
-				StatusCode: statusCode,
+				Status: "error",
+				Error:  "internal server error",
 			}
-			if shared_errors.IsInternalError(c.Errors[0]) {
+
+			if shared_errors.IsInternalError(c.Errors[0].Err) {
 				resp.Error = c.Errors[0].Error()
-				resp.StatusCode = http.StatusBadRequest
+				statusCode = http.StatusBadRequest
 			}
+			resp.StatusCode = statusCode
 			c.JSON(statusCode, resp)
 		}
 	}

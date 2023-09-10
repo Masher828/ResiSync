@@ -1,11 +1,16 @@
 package shared_utils
 
 import (
+	"ResiSync/pkg/api"
+	"ResiSync/pkg/models"
 	"fmt"
 	"regexp"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/nyaruka/phonenumbers"
+	"go.uber.org/zap"
 )
 
 func NowInUTC() time.Time {
@@ -27,4 +32,44 @@ func IsValidContact(contact, region string) bool {
 	}
 
 	return phonenumbers.IsValidNumber(number)
+}
+
+func GetPresignedS3Url(requestContext models.ResiSyncRequestContext, bucket, key string, duration time.Duration) string {
+	span := api.AddTrace(&requestContext, "info", "GetPresignedS3Url")
+	defer span.End()
+
+	s3Session := api.ApplicationContext.S3Session
+
+	req, _ := s3Session.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+
+	urlStr, err := req.Presign(duration)
+	if err != nil {
+		requestContext.Log.Error("Failed to sign object",
+			zap.String("bucket", bucket), zap.String("key", key), zap.Error(err))
+	}
+
+	return urlStr
+}
+
+func DeleteObjectFromS3(requestContext models.ResiSyncRequestContext, bucket, key string) error {
+	span := api.AddTrace(&requestContext, "info", "DeleteObjectFromS3")
+	defer span.End()
+
+	s3Session := api.ApplicationContext.S3Session
+
+	_, err := s3Session.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+
+	if err != nil {
+		requestContext.Log.Error("Failed to delete object request",
+			zap.String("bucket", bucket), zap.String("key", key), zap.Error(err))
+		return err
+	}
+
+	return nil
 }

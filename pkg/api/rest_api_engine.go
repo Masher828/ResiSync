@@ -2,7 +2,7 @@ package api
 
 import (
 	"ResiSync/pkg/config"
-	"ResiSync/pkg/constants"
+	pkg_constants "ResiSync/pkg/constants"
 	"ResiSync/pkg/logger"
 	"ResiSync/pkg/models"
 	"ResiSync/pkg/otel"
@@ -56,7 +56,7 @@ func GetRestApiEngine(appContext *models.ApplicationContextStruct) *gin.Engine {
 
 	//TODO add metrics
 
-	if os.Getenv(constants.EnvEnvironment) == constants.EnvironmentProduction {
+	if os.Getenv(pkg_constants.EnvEnvironment) == pkg_constants.EnvironmentProduction {
 		gin.SetMode(gin.ReleaseMode)
 	} else {
 		gin.SetMode(gin.DebugMode)
@@ -102,26 +102,26 @@ func applyAuth() gin.HandlerFunc {
 		accessToken := GetAccessToken(c)
 
 		if len(accessToken) > 0 {
-			requestContextInterface, _ := c.Get(constants.RequestContextKey)
+			requestContextInterface, _ := c.Get(pkg_constants.RequestContextKey)
 			requestContext := requestContextInterface.(*models.ResiSyncRequestContext)
 
 			userContext, err := GetUserContextFromAccessToken(requestContext, accessToken)
 			if err != nil {
 
 				log.Error("Error while getting usercontext", zap.String("access token", accessToken), zap.Error(err))
-				c.Set(constants.RequestAuthenticatedKey, false)
+				c.Set(pkg_constants.RequestAuthenticatedKey, false)
 
 			} else {
 
 				requestContext.SetUserContext(userContext)
-				requestContext.Log = requestContext.Log.With(zap.Field{Key: "user Id", Integer: userContext.ID})
-				c.Set(constants.RequestUserContextKey, userContext)
-				c.Set(constants.RequestAuthenticatedKey, true)
-				c.Set(constants.RequestContextKey, requestContext)
+				// requestContext.Log = requestContext.Log.With(zap.Field{Key: "user Id", Integer: userContext.ID})
+				c.Set(pkg_constants.RequestUserContextKey, userContext)
+				c.Set(pkg_constants.RequestAuthenticatedKey, true)
+				c.Set(pkg_constants.RequestContextKey, requestContext)
 			}
 
 		} else {
-			c.Set(constants.RequestAuthenticatedKey, false)
+			c.Set(pkg_constants.RequestAuthenticatedKey, false)
 		}
 
 		c.Next()
@@ -142,7 +142,7 @@ func addRequestContext(appName string) gin.HandlerFunc {
 
 		requestContext.SetTraceID(uuid.New().String())
 
-		c.Set(constants.RequestContextKey, &requestContext)
+		c.Set(pkg_constants.RequestContextKey, &requestContext)
 
 		c.Next()
 

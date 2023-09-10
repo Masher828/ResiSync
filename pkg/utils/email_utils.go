@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"ResiSync/pkg/constants"
+	pkg_constants "ResiSync/pkg/constants"
 	"ResiSync/pkg/logger"
 	"ResiSync/pkg/models"
 	"ResiSync/pkg/security"
@@ -17,7 +17,7 @@ import (
 func getSmtpConfig() (*models.SmtpConfig, error) {
 	log := logger.GetBasicLogger()
 
-	key := constants.ConfigSmtpKey
+	key := pkg_constants.ConfigSmtpKey
 
 	var smtpConfig models.SmtpConfig
 

@@ -6,4 +6,5 @@ type Aws struct {
 	SecretKeyNonce     string `mapstructure:"secret_key_nonce" validate:"required,base64"`
 	Token              string `mapstructure:"token"`
 	Region             string `mapstructure:"region" validate:"required"`
+	S3Bucket           string `mapstructure:"s3_bucket" validate:"required"`
 }

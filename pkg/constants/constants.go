@@ -70,9 +70,3 @@ const (
 	SessionExpiryTime          = time.Hour * 24
 	RequestContextKey          = "resi_sync_request_context"
 )
-
-// security
-var (
-	EncryptionSection = fmt.Sprintf("%s.%s", CommonConfigFolderName, "encryption")
-	EncryptionKey     = fmt.Sprintf("%s.%s", EncryptionSection, "app_encryption_key")
-)

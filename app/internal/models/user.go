@@ -1,4 +1,4 @@
-package userModels
+package user_models
 
 type Resident struct {
 	Id          int64
@@ -6,6 +6,7 @@ type Resident struct {
 	LastName    string
 	EmailId     string
 	Phone       string
+	CountryCode string
 	IsActive    bool
 	Password    string
 	Salt        string

@@ -1,12 +1,12 @@
 package authfacade
 
 import (
-	user_errors "ResiSync/app/internal/app_errors"
 	userModels "ResiSync/app/internal/models"
 	userService "ResiSync/app/internal/services/user_service.go"
 	"ResiSync/pkg/api"
 	"ResiSync/pkg/models"
 	postgres_db "ResiSync/shared/database"
+	shared_errors "ResiSync/shared/errors"
 
 	"go.uber.org/zap"
 )
@@ -17,13 +17,13 @@ func SignUp(requestContext models.ResiSyncRequestContext, userDto *userModels.Re
 
 	log := requestContext.Log
 
-	if !userDto.IsValid() {
-		return user_errors.ErrInvalidPayload
-	}
-
 	user, err := userService.GetNewUserObject(requestContext, userDto)
 	if err != nil {
 		log.Error("error while creating user object", zap.Error(err))
+		return err
+	}
+
+	if err := userService.ValidateUser(requestContext, user); err != nil {
 		return err
 	}
 
@@ -49,7 +49,7 @@ func SignIn(requestContext models.ResiSyncRequestContext, userDto *userModels.Re
 	}
 
 	if !isAuthenticated {
-		return user_errors.ErrInvalidCredentials
+		return shared_errors.ErrInvalidCredentials
 	} else {
 		userDto.Salt = ""
 		userDto.Password = ""

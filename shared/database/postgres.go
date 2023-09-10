@@ -74,3 +74,19 @@ func GetData(requestContext models.ResiSyncRequestContext, data interface{}) err
 	return nil
 
 }
+
+func UpdateWithFields(requestContext models.ResiSyncRequestContext, data interface{}, fields ...string) error {
+	span := api.AddTrace(&requestContext, "info", "UpdateWithFields")
+	defer span.End()
+
+	log := requestContext.Log
+
+	postgresDB := api.ApplicationContext.Postgres
+
+	err := postgresDB.Model(data).Select(fields).Updates(data).Error
+	if err != nil {
+		log.Error("error while updating data", zap.Error(err))
+		return err
+	}
+	return nil
+}

@@ -1,11 +1,11 @@
 package controller
 
 import (
-	user_errors "ResiSync/app/internal/app_errors"
 	userModels "ResiSync/app/internal/models"
 	"ResiSync/app/internal/services/user_service.go"
 	authfacade "ResiSync/app/internal/services_facade/auth_facade"
 	"ResiSync/pkg/api"
+	shared_errors "ResiSync/shared/errors"
 	shared_models "ResiSync/shared/models"
 	"net/http"
 
@@ -26,7 +26,7 @@ func SignIn(c *gin.Context) {
 	err := c.ShouldBind(&user)
 	if err != nil {
 		log.Error("error while binding user signin data", zap.Error(err))
-		c.Error(user_errors.ErrInvalidPayload)
+		c.Error(shared_errors.ErrInvalidPayload)
 		return
 	}
 
@@ -37,7 +37,7 @@ func SignIn(c *gin.Context) {
 		return
 	}
 
-	response := shared_models.Response{Status: "ok", Data: user}
+	response := shared_models.Response{Status: "ok", Data: user, StatusCode: http.StatusOK}
 
 	c.JSON(http.StatusOK, response)
 }
@@ -55,7 +55,7 @@ func SignUp(c *gin.Context) {
 	err := c.ShouldBind(&user)
 	if err != nil {
 		log.Error("error while binding user sign up data", zap.Error(err))
-		c.Error(user_errors.ErrInvalidPayload)
+		c.Error(shared_errors.ErrInvalidPayload)
 		return
 	}
 
@@ -67,7 +67,7 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	response := shared_models.Response{Status: "ok"}
+	response := shared_models.Response{Status: "ok", StatusCode: http.StatusOK}
 
 	c.JSON(http.StatusOK, response)
 }
@@ -80,7 +80,7 @@ func LogOut(c *gin.Context) {
 	}
 
 	user_service.LogOut(*requestContext)
-	response := shared_models.Response{Status: "ok"}
+	response := shared_models.Response{Status: "ok", StatusCode: http.StatusOK}
 
 	c.JSON(http.StatusOK, response)
 

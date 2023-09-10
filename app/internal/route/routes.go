@@ -21,4 +21,5 @@ func (r *Rest) SetupPublicRoutes(engine *gin.Engine) {
 
 	//user Details
 	engine.GET("/user/profile", controller.GetUserProfile)
+	engine.PUT("/user/profile", controller.UpdateUserProfile)
 }

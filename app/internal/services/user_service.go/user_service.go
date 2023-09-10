@@ -9,6 +9,7 @@ import (
 	"ResiSync/pkg/models"
 	"ResiSync/pkg/security"
 	postgres_db "ResiSync/shared/database"
+	shared_errors "ResiSync/shared/errors"
 	shared_utils "ResiSync/shared/utils"
 	"encoding/json"
 
@@ -147,11 +148,42 @@ func GetUserProfile(requestContext models.ResiSyncRequestContext) (*user_models.
 
 	user := user_models.Resident{Id: userContext.ID}
 
-	err := postgres_db.GetWithFields(requestContext, &user, user_constants.UserProfile)
+	err := postgres_db.GetWithFields(requestContext, &user, user_constants.GetUserProfileFields)
 	if err != nil {
 		log.Error("Error while fetching profile", zap.Int64("user id", userContext.ID), zap.Error(err))
 		return nil, err
 	}
 
 	return &user, nil
+}
+
+func UpdateUserProfile(requestContext models.ResiSyncRequestContext, user *user_models.Resident) error {
+	span := api.AddTrace(&requestContext, "info", "UpdateUserProfile")
+	defer span.End()
+	log := requestContext.Log
+
+	err := postgres_db.UpdateWithFields(requestContext, &user, user_constants.UpdateUserProfileFields...)
+	if err != nil {
+		log.Error("Error while updating profile", zap.Int64("user id", requestContext.GetUserContext().ID), zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func ValidateUser(requestContext models.ResiSyncRequestContext, user *user_models.Resident) error {
+	span := api.AddTrace(&requestContext, "info", "ValidateUser")
+	defer span.End()
+
+	if !shared_utils.IsValidEmail(user.EmailId) {
+		return shared_errors.ErrInvalidEmail
+	}
+
+	if !shared_utils.IsValidContact(user.Phone, user.CountryCode) {
+		return shared_errors.ErrInvalidContact
+	}
+
+	if 8 > len(user.Password) || len(user.Password) > 20 {
+		return shared_errors.ErrWeakPassword
+	}
+	return nil
 }

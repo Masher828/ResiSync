@@ -2,7 +2,7 @@ package logger
 
 import (
 	pkg_constants "ResiSync/pkg/constants"
-	"ResiSync/pkg/models"
+	pkg_models "ResiSync/pkg/models"
 	"log"
 	"strings"
 
@@ -44,7 +44,7 @@ func initializeLogger() {
 
 	key := strings.Join(keyPath, ".")
 
-	var conf models.LoggerConfig
+	var conf pkg_models.LoggerConfig
 
 	err := viper.UnmarshalKey(key, &conf)
 	if err != nil {

@@ -2,17 +2,18 @@ package user_service
 
 import (
 	user_constants "ResiSync/app/internal/constants/user"
-	user_models "ResiSync/app/internal/models"
-	user_utils "ResiSync/app/internal/utils"
+	user_models "ResiSync/app/internal/models/user"
+	"fmt"
+
 	"ResiSync/pkg/api"
 	pkg_constants "ResiSync/pkg/constants"
-	"ResiSync/pkg/models"
+	pkg_models "ResiSync/pkg/models"
+
 	"ResiSync/pkg/security"
 	postgres_db "ResiSync/shared/database"
 	shared_errors "ResiSync/shared/errors"
 	shared_utils "ResiSync/shared/utils"
 	"bytes"
-	"encoding/json"
 	"mime/multipart"
 	"strconv"
 	"time"
@@ -21,12 +22,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/google/uuid"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
-func GetNewUserObject(requestContext models.ResiSyncRequestContext, userDto *user_models.ResidentDTO) (*user_models.Resident, error) {
+func GetNewUserObject(requestContext pkg_models.ResiSyncRequestContext, userDto *user_models.ResidentDTO) (*user_models.Resident, error) {
 	span := api.AddTrace(&requestContext, "info", "GetNewUser")
 	defer span.End()
 
@@ -42,7 +42,7 @@ func GetNewUserObject(requestContext models.ResiSyncRequestContext, userDto *use
 
 	var err error
 
-	user.Password, user.Salt, err = security.Hashpassword(requestContext, 16, userDto.Password)
+	err = HashUserPassword(requestContext, user, userDto.Password)
 	if err != nil {
 		log.Error("Error while hashing password", zap.Error(err))
 		return nil, err
@@ -57,98 +57,7 @@ func GetNewUserObject(requestContext models.ResiSyncRequestContext, userDto *use
 	return user, err
 }
 
-func Authenticate(requestContext models.ResiSyncRequestContext, userDto *user_models.ResidentDTO, password string) (bool, error) {
-	span := api.AddTrace(&requestContext, "info", "Authenticate")
-	defer span.End()
-
-	log := requestContext.Log
-
-	userDto.Password = ""
-
-	err := postgres_db.GetData(requestContext, &userDto)
-	if err != nil {
-		log.Error("error while querying data for user", zap.Error(err))
-		return false, err
-	}
-
-	passwordMatching := security.ComparePassword(userDto.Password, userDto.Salt, password)
-
-	return passwordMatching, nil
-}
-
-func InitUserSession(requestContext models.ResiSyncRequestContext, userSession *user_models.ResidentDTO) error {
-	span := api.AddTrace(&requestContext, "info", "InitUserSession")
-	defer span.End()
-
-	log := requestContext.Log
-
-	userSession.AccessToken = uuid.New().String()
-
-	redisDB := api.ApplicationContext.Redis
-
-	userSessionBytes, err := json.Marshal(userSession)
-	if err != nil {
-		log.Error("error while marshalling user sesison", zap.Error(err))
-		return err
-	}
-
-	key := user_utils.GetAccessTokenToUserKey(userSession.AccessToken)
-
-	err = redisDB.Set(requestContext.Context, key, userSessionBytes, pkg_constants.SessionExpiryTime).Err()
-	if err != nil {
-		log.Error("error while creating access token to user key", zap.Error(err))
-		return err
-	}
-
-	key = user_utils.GetUserToAccessTokenKey(userSession.Id)
-	err = redisDB.LPush(requestContext.Context, key, 0, userSession.AccessToken).Err()
-	if err != nil {
-		log.Error("error while creating user to access token key", zap.Error(err))
-		return err
-	}
-
-	return nil
-}
-
-func UpdateLastLogIn(requestContext models.ResiSyncRequestContext, id int64) error {
-	span := api.AddTrace(&requestContext, "info", "UpdateLastLogIn")
-	defer span.End()
-
-	log := requestContext.Log
-
-	var user = user_models.Resident{Id: id, LastLoginOn: shared_utils.NowInUTC().UnixNano()}
-
-	err := postgres_db.UpdateWithFields(requestContext, &user, "last_login_on")
-	if err != nil {
-		log.Error("error while updating user last logged in time", zap.Error(err))
-		return err
-	}
-
-	return nil
-}
-
-func LogOut(requestContext models.ResiSyncRequestContext) {
-	span := api.AddTrace(&requestContext, "info", "LogOut")
-	defer span.End()
-	log := requestContext.Log
-
-	userContext := requestContext.GetUserContext()
-
-	redisDB := api.ApplicationContext.Redis
-
-	key := user_utils.GetAccessTokenToUserKey(userContext.AccessToken)
-
-	if err := redisDB.Del(requestContext.Context, key).Err(); err != nil {
-		log.Error("error while removing user access token", zap.Error(err), zap.Int64("userId", userContext.ID))
-	}
-
-	key = user_utils.GetUserToAccessTokenKey(userContext.ID)
-	if err := redisDB.LRem(requestContext.Context, key, 1, userContext.AccessToken).Err(); err != nil {
-		log.Error("error while removing user access token ", zap.Error(err), zap.Int64("userId", userContext.ID))
-	}
-}
-
-func GetUserProfile(requestContext models.ResiSyncRequestContext) (*user_models.ResidentDTO, error) {
+func GetUserProfile(requestContext pkg_models.ResiSyncRequestContext) (*user_models.ResidentDTO, error) {
 	span := api.AddTrace(&requestContext, "info", "GetUserProfile")
 	defer span.End()
 	log := requestContext.Log
@@ -167,7 +76,7 @@ func GetUserProfile(requestContext models.ResiSyncRequestContext) (*user_models.
 	return user.GetUserDTO(), nil
 }
 
-func UpdateUserProfile(requestContext models.ResiSyncRequestContext, user *user_models.ResidentDTO) error {
+func UpdateUserProfile(requestContext pkg_models.ResiSyncRequestContext, user *user_models.ResidentDTO) error {
 	span := api.AddTrace(&requestContext, "info", "UpdateUserProfile")
 	defer span.End()
 	log := requestContext.Log
@@ -180,7 +89,7 @@ func UpdateUserProfile(requestContext models.ResiSyncRequestContext, user *user_
 	return nil
 }
 
-func ValidateUser(requestContext models.ResiSyncRequestContext, user *user_models.Resident) error {
+func ValidateUser(requestContext pkg_models.ResiSyncRequestContext, user *user_models.Resident) error {
 	span := api.AddTrace(&requestContext, "info", "ValidateUser")
 	defer span.End()
 
@@ -195,7 +104,7 @@ func ValidateUser(requestContext models.ResiSyncRequestContext, user *user_model
 	return nil
 }
 
-func UpdateProfilePictureInS3(requestContext models.ResiSyncRequestContext, file multipart.File, header *multipart.FileHeader) (string, error) {
+func UpdateProfilePictureInS3(requestContext pkg_models.ResiSyncRequestContext, file multipart.File, header *multipart.FileHeader) (string, error) {
 	span := api.AddTrace(&requestContext, "info", "GetProfilePictureS3Object")
 	defer span.End()
 
@@ -239,7 +148,7 @@ func UpdateProfilePictureInS3(requestContext models.ResiSyncRequestContext, file
 	return "", nil
 }
 
-func UpdateProfilePicture(requestContext models.ResiSyncRequestContext, profilePictureUrl string) error {
+func UpdateProfilePicture(requestContext pkg_models.ResiSyncRequestContext, profilePictureUrl string) error {
 	span := api.AddTrace(&requestContext, "info", "UpdateProfilePicture")
 	defer span.End()
 
@@ -258,5 +167,58 @@ func UpdateProfilePicture(requestContext models.ResiSyncRequestContext, profileP
 	}
 
 	return nil
+}
 
+func SendEmailOtp(requestContext pkg_models.ResiSyncRequestContext, emailId, otp string) error {
+
+	span := api.AddTrace(&requestContext, "info", "SendEmailOtp")
+	defer span.End()
+
+	log := requestContext.Log
+	if len(emailId) == 0 {
+		log.Error("error no email is provided")
+		return nil
+	}
+
+	redisDb := api.ApplicationContext.Redis
+
+	key := fmt.Sprintf(user_constants.EmailOtpKey, emailId)
+	count, _ := redisDb.Exists(requestContext.Context, key).Result()
+	if count > 0 {
+		return nil
+	}
+
+	// go pkg_utils.SendEmail(emailId, "Reset Password OTP", "your otp is "+otp)
+	return nil
+}
+
+func VerifyEmailOtp(requestContext pkg_models.ResiSyncRequestContext, emailId, enteredOtp string) bool {
+	span := api.AddTrace(&requestContext, "info", "VerifyEmailOtp")
+	defer span.End()
+
+	log := requestContext.Log
+
+	redisDb := api.ApplicationContext.Redis
+
+	key := fmt.Sprintf(user_constants.EmailOtpKey, emailId)
+	actualOtp, err := redisDb.Get(requestContext.Context, key).Result()
+	if err != nil {
+		log.Error("error while getting otp", zap.Error(err), zap.String("emailId", emailId))
+	}
+
+	return actualOtp == enteredOtp
+}
+
+func HashUserPassword(requestContext pkg_models.ResiSyncRequestContext, user *user_models.Resident, password string) error {
+	span := api.AddTrace(&requestContext, "info", "HashUserPassword")
+	defer span.End()
+
+	log := requestContext.Log
+	var err error = nil
+	user.Password, user.Salt, err = security.Hashpassword(requestContext, 16, password)
+	if err != nil {
+		log.Error("Error while hashing password", zap.Error(err))
+		return err
+	}
+	return nil
 }

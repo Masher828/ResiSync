@@ -1,4 +1,4 @@
-package models
+package pkg_models
 
 type Aws struct {
 	AccessKeyId        string `mapstructure:"access_key_id" validate:"required"`

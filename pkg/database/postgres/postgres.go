@@ -2,7 +2,7 @@ package postgresclient
 
 import (
 	pkg_constants "ResiSync/pkg/constants"
-	"ResiSync/pkg/models"
+	pkg_models "ResiSync/pkg/models"
 	"ResiSync/pkg/otel"
 	"ResiSync/pkg/security"
 	"context"
@@ -21,7 +21,7 @@ var tracer *sdktrace.TracerProvider = nil
 
 func GetPostgresClient() (*gorm.DB, error) {
 
-	var postgresConf models.Postgres
+	var postgresConf pkg_models.Postgres
 
 	err := viper.UnmarshalKey(pkg_constants.ConfigSectionPostgres, &postgresConf)
 	if err != nil {

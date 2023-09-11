@@ -6,7 +6,7 @@ import (
 	postgresclient "ResiSync/pkg/database/postgres"
 	redisclient "ResiSync/pkg/database/redis"
 	"ResiSync/pkg/logger"
-	"ResiSync/pkg/models"
+	pkg_models "ResiSync/pkg/models"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -23,10 +23,10 @@ import (
 	"go.uber.org/zap"
 )
 
-var ApplicationContext *models.ApplicationContextStruct
+var ApplicationContext *pkg_models.ApplicationContextStruct
 
 func init() {
-	ApplicationContext = new(models.ApplicationContextStruct)
+	ApplicationContext = new(pkg_models.ApplicationContextStruct)
 }
 
 func PrepareApplicationContext() error {
@@ -67,7 +67,7 @@ func GetAccessToken(c *gin.Context) string {
 	return accessToken
 }
 
-func GetUserContextFromAccessToken(requestContext *models.ResiSyncRequestContext, accessToken string) (*models.UserContext, error) {
+func GetUserContextFromAccessToken(requestContext *pkg_models.ResiSyncRequestContext, accessToken string) (*pkg_models.UserContext, error) {
 
 	redisDB := ApplicationContext.Redis
 
@@ -86,7 +86,7 @@ func GetUserContextFromAccessToken(requestContext *models.ResiSyncRequestContext
 		return nil, err
 	}
 
-	var userContext *models.UserContext
+	var userContext *pkg_models.UserContext
 
 	err = json.Unmarshal(userBytes, &userContext)
 	if err != nil {
@@ -97,14 +97,14 @@ func GetUserContextFromAccessToken(requestContext *models.ResiSyncRequestContext
 	return userContext, nil
 }
 
-func SetupRoutes(engine *gin.Engine, routerContext models.RouteContext) {
+func SetupRoutes(engine *gin.Engine, routerContext pkg_models.RouteContext) {
 
 	routerContext.SetupPrivateRoutes(engine)
 
 	routerContext.SetupPublicRoutes(engine)
 }
 
-func GracefulShutdownApp(srv *http.Server, shutdown models.Shutdown) {
+func GracefulShutdownApp(srv *http.Server, shutdown pkg_models.Shutdown) {
 
 	log := logger.GetBasicLogger()
 
@@ -146,13 +146,13 @@ func closeConnections(log *zap.Logger) {
 	log.Info("Connections closed")
 }
 
-func GetRequestContextFromRequest(c *gin.Context) *models.ResiSyncRequestContext {
+func GetRequestContextFromRequest(c *gin.Context) *pkg_models.ResiSyncRequestContext {
 	requestContext, _ := c.Get(pkg_constants.RequestContextKey)
 
-	return requestContext.(*models.ResiSyncRequestContext)
+	return requestContext.(*pkg_models.ResiSyncRequestContext)
 }
 
-func AddTrace(requestContext *models.ResiSyncRequestContext, level, spanName string) trace.Span {
+func AddTrace(requestContext *pkg_models.ResiSyncRequestContext, level, spanName string) trace.Span {
 
 	tracerContext, span := openotel.Tracer("").Start(requestContext.Context, spanName)
 

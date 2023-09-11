@@ -1,4 +1,4 @@
-package models
+package pkg_models
 
 import (
 	"context"

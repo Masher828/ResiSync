@@ -12,4 +12,6 @@ var (
 	ErrInvalidContact = errors.New("please enter valid contact")
 
 	ErrWeakPassword = errors.New("please enter strong password")
+
+	ErrInvalidOTP = errors.New("please enter a valid otp")
 )

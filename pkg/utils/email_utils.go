@@ -1,9 +1,9 @@
-package utils
+package pkg_utils
 
 import (
 	pkg_constants "ResiSync/pkg/constants"
 	"ResiSync/pkg/logger"
-	"ResiSync/pkg/models"
+	pkg_models "ResiSync/pkg/models"
 	"ResiSync/pkg/security"
 	"html"
 	"net/smtp"
@@ -14,12 +14,12 @@ import (
 	"go.uber.org/zap"
 )
 
-func getSmtpConfig() (*models.SmtpConfig, error) {
+func getSmtpConfig() (*pkg_models.SmtpConfig, error) {
 	log := logger.GetBasicLogger()
 
 	key := pkg_constants.ConfigSmtpKey
 
-	var smtpConfig models.SmtpConfig
+	var smtpConfig pkg_models.SmtpConfig
 
 	err := viper.UnmarshalKey(key, &smtpConfig)
 	if err != nil {
@@ -58,11 +58,11 @@ func getSmtpDetails() (smtp.Auth, string, error) {
 	return auth, smtpconfig.Host + ":" + smtpconfig.Port, nil
 }
 
-func SendEmail(from, to, subject, body string) error {
-	return SendEmailToMultiple([]string{to}, from, subject, body)
+func SendEmail(to, subject, body string) error {
+	return SendEmailToMultiple([]string{to}, subject, body)
 }
 
-func SendEmailToMultiple(to []string, from, subject, body string) error {
+func SendEmailToMultiple(to []string, subject, body string) error {
 	log := logger.GetBasicLogger()
 	auth, host, err := getSmtpDetails()
 	if err != nil {
@@ -71,7 +71,7 @@ func SendEmailToMultiple(to []string, from, subject, body string) error {
 	}
 
 	e := email.NewEmail()
-	e.From = from
+	e.From = viper.GetString("common.smpt.email")
 	e.To = to
 	e.Subject = subject
 	e.HTML = []byte(html.UnescapeString(body))

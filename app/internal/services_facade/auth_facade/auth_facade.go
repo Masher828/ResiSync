@@ -1,29 +1,31 @@
-package authfacade
+package auth_facade
 
 import (
-	userModels "ResiSync/app/internal/models"
-	userService "ResiSync/app/internal/services/user_service.go"
+	"ResiSync/app/internal/models"
+	user_models "ResiSync/app/internal/models/user"
+	"ResiSync/app/internal/services/auth_service"
+	"ResiSync/app/internal/services/user_service.go"
 	"ResiSync/pkg/api"
-	"ResiSync/pkg/models"
+	pkg_models "ResiSync/pkg/models"
 	postgres_db "ResiSync/shared/database"
 	shared_errors "ResiSync/shared/errors"
 
 	"go.uber.org/zap"
 )
 
-func SignUp(requestContext models.ResiSyncRequestContext, userDto *userModels.ResidentDTO) error {
+func SignUp(requestContext pkg_models.ResiSyncRequestContext, userDto *user_models.ResidentDTO) error {
 	span := api.AddTrace(&requestContext, "info", "SignUp")
 	defer span.End()
 
 	log := requestContext.Log
 
-	user, err := userService.GetNewUserObject(requestContext, userDto)
+	user, err := user_service.GetNewUserObject(requestContext, userDto)
 	if err != nil {
 		log.Error("error while creating user object", zap.Error(err))
 		return err
 	}
 
-	if err := userService.ValidateUser(requestContext, user); err != nil {
+	if err := user_service.ValidateUser(requestContext, user); err != nil {
 		return err
 	}
 
@@ -36,13 +38,13 @@ func SignUp(requestContext models.ResiSyncRequestContext, userDto *userModels.Re
 	return nil
 }
 
-func SignIn(requestContext models.ResiSyncRequestContext, userDto *userModels.ResidentDTO) error {
+func SignIn(requestContext pkg_models.ResiSyncRequestContext, userDto *user_models.ResidentDTO) error {
 	span := api.AddTrace(&requestContext, "info", "SignIn")
 	defer span.End()
 
 	log := requestContext.Log
 
-	isAuthenticated, err := userService.Authenticate(requestContext, userDto, userDto.Password)
+	isAuthenticated, err := auth_service.Authenticate(requestContext, userDto, userDto.Password)
 	if err != nil {
 		log.Error("error while authentication for user", zap.Error(err))
 		return err
@@ -55,13 +57,59 @@ func SignIn(requestContext models.ResiSyncRequestContext, userDto *userModels.Re
 		userDto.Password = ""
 	}
 
-	err = userService.InitUserSession(requestContext, userDto)
+	err = auth_service.InitUserSession(requestContext, userDto)
 	if err != nil {
 		log.Error("error while initializing session for user", zap.Error(err))
 		return err
 	}
 
-	go userService.UpdateLastLogIn(requestContext, userDto.Id)
+	go auth_service.UpdateLastLogIn(requestContext, userDto.Id)
 
 	return nil
+}
+
+func VerifyOtp(requestContext pkg_models.ResiSyncRequestContext, verifyRequest *models.ResetPassword) bool {
+	span := api.AddTrace(&requestContext, "info", "VerifyOtp")
+	defer span.End()
+
+	if verifyRequest.Method == "email" {
+		return user_service.VerifyEmailOtp(requestContext, verifyRequest.Contact, verifyRequest.Otp)
+	}
+
+	return false
+}
+
+func ResetPassword(requestContext pkg_models.ResiSyncRequestContext, verifyRequest *models.ResetPassword) error {
+	span := api.AddTrace(&requestContext, "info", "ResetPassword")
+	defer span.End()
+
+	log := requestContext.Log
+	if !VerifyOtp(requestContext, verifyRequest) {
+		return shared_errors.ErrInvalidOTP
+	}
+
+	var condition string
+
+	if verifyRequest.Method == "email" {
+		condition = "email_id = ?"
+	} else {
+		return nil
+	}
+
+	var user user_models.Resident
+	err := postgres_db.GetDataWithCriteria(requestContext, &user, condition)
+	if err != nil {
+		log.Error("error while getting user details",
+			zap.String("method", verifyRequest.Method), zap.String("contact", verifyRequest.Contact), zap.Error(err))
+		return err
+	}
+
+	err = auth_service.UpdatePassword(requestContext, &user, verifyRequest.Password)
+	if err != nil {
+		log.Error("error while updating password",
+			zap.Int64("user id", user.Id), zap.Error(err))
+		return err
+	}
+	return nil
+
 }

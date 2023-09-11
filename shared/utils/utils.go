@@ -2,8 +2,11 @@ package shared_utils
 
 import (
 	"ResiSync/pkg/api"
-	"ResiSync/pkg/models"
+	pkg_models "ResiSync/pkg/models"
+	"crypto/rand"
 	"fmt"
+	"log"
+	"math/big"
 	"regexp"
 	"time"
 
@@ -34,7 +37,7 @@ func IsValidContact(contact, region string) bool {
 	return phonenumbers.IsValidNumber(number)
 }
 
-func GetPresignedS3Url(requestContext models.ResiSyncRequestContext, bucket, key string, duration time.Duration) string {
+func GetPresignedS3Url(requestContext pkg_models.ResiSyncRequestContext, bucket, key string, duration time.Duration) string {
 	span := api.AddTrace(&requestContext, "info", "GetPresignedS3Url")
 	defer span.End()
 
@@ -54,7 +57,7 @@ func GetPresignedS3Url(requestContext models.ResiSyncRequestContext, bucket, key
 	return urlStr
 }
 
-func DeleteObjectFromS3(requestContext models.ResiSyncRequestContext, bucket, key string) error {
+func DeleteObjectFromS3(requestContext pkg_models.ResiSyncRequestContext, bucket, key string) error {
 	span := api.AddTrace(&requestContext, "info", "DeleteObjectFromS3")
 	defer span.End()
 
@@ -72,4 +75,13 @@ func DeleteObjectFromS3(requestContext models.ResiSyncRequestContext, bucket, ke
 	}
 
 	return nil
+}
+
+func GenerateOTP() string {
+	max := big.NewInt(999999)
+	n, err := rand.Int(rand.Reader, max)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return n.String()
 }

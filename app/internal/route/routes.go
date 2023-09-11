@@ -18,9 +18,12 @@ func (r *Rest) SetupPublicRoutes(engine *gin.Engine) {
 	engine.POST("/user/signin", controller.SignIn)
 	engine.POST("/user/signup", controller.SignUp)
 	engine.POST("/user/logout", controller.LogOut)
+	engine.POST("/user/password/reset", controller.ResetPassword)
 
 	//user Details
 	engine.GET("/user/profile", controller.GetUserProfile)
 	engine.PUT("/user/profile", controller.UpdateUserProfile)
 	engine.PUT("/user/profile/picture", controller.UpdateProfilePicture)
+	engine.POST("/user/otp/send", controller.SendOTP)
+
 }

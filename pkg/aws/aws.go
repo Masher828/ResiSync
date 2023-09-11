@@ -2,7 +2,7 @@ package aws_services
 
 import (
 	pkg_constants "ResiSync/pkg/constants"
-	"ResiSync/pkg/models"
+	pkg_models "ResiSync/pkg/models"
 	"ResiSync/pkg/security"
 	"log"
 
@@ -16,7 +16,7 @@ import (
 
 func CreateNewS3Session() (*s3.S3, error) {
 
-	var awsModel models.Aws
+	var awsModel pkg_models.Aws
 	err := viper.UnmarshalKey(pkg_constants.ConfigSectionAWS, &awsModel)
 	if err != nil {
 		log.Println("Error while unmarshalling aws config", err)

@@ -1,4 +1,4 @@
-package models
+package pkg_models
 
 import (
 	"github.com/aws/aws-sdk-go/service/s3"

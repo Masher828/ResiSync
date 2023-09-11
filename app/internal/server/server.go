@@ -6,7 +6,7 @@ import (
 	"ResiSync/pkg/api"
 	"ResiSync/pkg/logger"
 	"ResiSync/pkg/migrator"
-	"ResiSync/pkg/models"
+	pkg_models "ResiSync/pkg/models"
 	shared_api "ResiSync/shared/api"
 	"fmt"
 	"net/http"
@@ -27,7 +27,7 @@ func main() {
 
 	log.Info("Starting running application")
 
-	applicationContext := models.ApplicationContextStruct{
+	applicationContext := pkg_models.ApplicationContextStruct{
 		AppName: appName,
 	}
 

@@ -1,4 +1,4 @@
-package utils
+package pkg_utils
 
 import (
 	pkg_constants "ResiSync/pkg/constants"
@@ -19,7 +19,7 @@ func GetLoggerEmailHook(appname string) func(entry zapcore.Entry) error {
 				env := os.Getenv(pkg_constants.EnvEnvironment)
 				body := entry.Message + "\n\n" + entry.Stack
 				subject := strings.ToUpper(env) + "-" + appname + "Error"
-				go SendEmail(from, to, subject, body)
+				go SendEmail(to, subject, body)
 			}
 		}
 		return nil

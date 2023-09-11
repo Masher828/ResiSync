@@ -4,9 +4,9 @@ import (
 	"ResiSync/pkg/config"
 	pkg_constants "ResiSync/pkg/constants"
 	"ResiSync/pkg/logger"
-	"ResiSync/pkg/models"
+	pkg_models "ResiSync/pkg/models"
 	"ResiSync/pkg/otel"
-	"ResiSync/pkg/utils"
+	pkg_utils "ResiSync/pkg/utils"
 	"context"
 	"os"
 
@@ -25,7 +25,7 @@ func init() {
 	log = logger.GetAppStartupLogger()
 }
 
-func GetRestApiEngine(appContext *models.ApplicationContextStruct) *gin.Engine {
+func GetRestApiEngine(appContext *pkg_models.ApplicationContextStruct) *gin.Engine {
 
 	err := config.LoadEnv()
 	if err != nil {
@@ -39,7 +39,7 @@ func GetRestApiEngine(appContext *models.ApplicationContextStruct) *gin.Engine {
 		return nil
 	}
 
-	logger.InitializeLoggerWithHook(utils.GetLoggerEmailHook(appContext.AppName))
+	logger.InitializeLoggerWithHook(pkg_utils.GetLoggerEmailHook(appContext.AppName))
 
 	log := logger.GetBasicLogger()
 
@@ -103,7 +103,7 @@ func applyAuth() gin.HandlerFunc {
 
 		if len(accessToken) > 0 {
 			requestContextInterface, _ := c.Get(pkg_constants.RequestContextKey)
-			requestContext := requestContextInterface.(*models.ResiSyncRequestContext)
+			requestContext := requestContextInterface.(*pkg_models.ResiSyncRequestContext)
 
 			userContext, err := GetUserContextFromAccessToken(requestContext, accessToken)
 			if err != nil {
@@ -134,7 +134,7 @@ func addRequestContext(appName string) gin.HandlerFunc {
 
 		// TODO add request context for calling service internally
 
-		var requestContext models.ResiSyncRequestContext
+		var requestContext pkg_models.ResiSyncRequestContext
 
 		requestContext.Context = context.TODO()
 

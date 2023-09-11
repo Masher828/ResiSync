@@ -8,6 +8,7 @@ func getInternalErrorMap() func(err error) bool {
 		ErrInvalidContact:     true,
 		ErrInvalidEmail:       true,
 		ErrWeakPassword:       true,
+		ErrInvalidOTP:         true,
 	}
 	return func(err error) bool {
 		return errMap[err]

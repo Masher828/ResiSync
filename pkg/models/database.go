@@ -1,4 +1,4 @@
-package models
+package pkg_models
 
 type Postgres struct {
 	Host          string `mapstructure:"host" validate:"required"`

@@ -1,7 +1,7 @@
 package migrator
 
-import "ResiSync/pkg/models"
+import pkg_models "ResiSync/pkg/models"
 
-func Migrate(migrate models.Migration) {
+func Migrate(migrate pkg_models.Migration) {
 	migrate.Migrate()
 }

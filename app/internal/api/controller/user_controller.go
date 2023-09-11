@@ -1,7 +1,7 @@
 package controller
 
 import (
-	user_models "ResiSync/app/internal/models"
+	user_models "ResiSync/app/internal/models/user"
 	"ResiSync/app/internal/services/user_service.go"
 	"ResiSync/app/internal/services_facade/user_facade"
 	"ResiSync/pkg/api"
@@ -60,7 +60,6 @@ func UpdateUserProfile(c *gin.Context) {
 	response := shared_models.Response{Status: "ok", StatusCode: http.StatusOK}
 
 	c.JSON(http.StatusOK, response)
-
 }
 
 func UpdateProfilePicture(c *gin.Context) {
@@ -89,4 +88,25 @@ func UpdateProfilePicture(c *gin.Context) {
 	response := shared_models.Response{Status: "ok", StatusCode: http.StatusOK}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func SendOTP(c *gin.Context) {
+	requestContext := api.GetRequestContextFromRequest(c)
+	span := api.AddTrace(requestContext, "info", "SendOTP")
+	if span != nil {
+		defer span.End()
+	}
+
+	log := requestContext.Log
+
+	err := user_facade.SendOTP(*requestContext, c.Query("method"), c.Query("contact"))
+	if err != nil {
+		log.Error("error while sending otp", zap.Error(err))
+		c.Error(err)
+		return
+	}
+	response := shared_models.Response{Status: "ok", StatusCode: http.StatusOK}
+
+	c.JSON(http.StatusOK, response)
+
 }

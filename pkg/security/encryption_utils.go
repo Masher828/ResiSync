@@ -2,7 +2,7 @@ package security
 
 import (
 	pkg_constants "ResiSync/pkg/constants"
-	"ResiSync/pkg/models"
+	pkg_models "ResiSync/pkg/models"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -131,7 +131,7 @@ func HashPasswordWithSalt(password string, salt []byte) string {
 	return hex.EncodeToString(hashedPasswordBytes)
 }
 
-func Hashpassword(requestContext models.ResiSyncRequestContext, hashLength int, password string) (string, string, error) {
+func Hashpassword(requestContext pkg_models.ResiSyncRequestContext, hashLength int, password string) (string, string, error) {
 
 	log := requestContext.Log
 
